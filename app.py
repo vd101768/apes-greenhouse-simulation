@@ -137,7 +137,7 @@ with tab1:
                 ctx.fillText("O", centerX - offset, centerY + 5); ctx.fillText("O", centerX + offset, centerY + 5);
 
                 if (dipoleActive) {{
-                    ctx.fillStyle = "#aaa"; ctx.font = "14px Arial";
+                    ctx.fillStyle = "#aaa"; ctx.font = "14px Arial"; ctx.textAlign = "center";
                     ctx.fillText("Symmetric Stretch: Δμ = 0 (No Dipole)", centerX, centerY - 60);
                 }}
 
@@ -220,11 +220,29 @@ with tab1:
                 ctx.stroke();
 
                 ctx.fillStyle = "#ff3333"; ctx.beginPath(); ctx.arc(oxygenX, oxygenY, 25, 0, Math.PI*2); ctx.fill();
-                ctx.fillStyle = "#fff"; ctx.font = "16px Arial"; ctx.textAlign = "center"; ctx.fillText("O", oxygenX, oxygenY + 5);
+                ctx.fillStyle = "#fff"; ctx.font = "16px Arial"; ctx.textAlign = "center";
+                ctx.fillText("O", oxygenX, oxygenY + 5);
 
                 ctx.fillStyle = "#e0e0e0";
                 ctx.beginPath(); ctx.arc(h1X, h1Y, 16, 0, Math.PI*2); ctx.fill();
                 ctx.beginPath(); ctx.arc(h2X, h2Y, 16, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#222"; ctx.font = "14px Arial";
+                ctx.fillText("H", h1X, h1Y + 5); ctx.fillText("H", h2X, h2Y + 5);
+
+                // FIXED: Adding Water Dipole Vector
+                if (dipoleActive) {{
+                    ctx.strokeStyle = "#bb33ff"; ctx.lineWidth = 4; ctx.fillStyle = "#bb33ff";
+                    ctx.beginPath();
+                    ctx.moveTo(oxygenX, oxygenY);
+                    let vectorLengthY = 60 + (hydrogenDistY * 0.5);
+                    ctx.lineTo(oxygenX, oxygenY + vectorLengthY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(oxygenX - 8, oxygenY + vectorLengthY - 12);
+                    ctx.lineTo(oxygenX, oxygenY + vectorLengthY);
+                    ctx.lineTo(oxygenX + 8, oxygenY + vectorLengthY - 12);
+                    ctx.fill();
+                }}
             }} else if (molType === "CO") {{
                 let offsetC = -50; let offsetO = 50;
                 ctx.strokeStyle = "#555"; ctx.lineWidth = 8; ctx.beginPath();
@@ -235,6 +253,22 @@ with tab1:
 
                 ctx.fillStyle = "#444444"; ctx.beginPath(); ctx.arc(centerX + offsetC, centerY, 22, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = "#ff3333"; ctx.beginPath(); ctx.arc(centerX + offsetO, centerY, 25, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#fff"; ctx.font = "16px Arial"; ctx.textAlign = "center";
+                ctx.fillText("C", centerX + offsetC, centerY + 5); ctx.fillText("O", centerX + offsetO, centerY + 5);
+
+                // FIXED: Adding Carbon Monoxide Dipole Vector
+                if (dipoleActive) {{
+                    ctx.strokeStyle = "#bb33ff"; ctx.lineWidth = 4; ctx.fillStyle = "#bb33ff";
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + offsetC, centerY - 45);
+                    ctx.lineTo(centerX + offsetO - 10, centerY - 45);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(centerX + offsetO - 20, centerY - 52);
+                    ctx.lineTo(centerX + offsetO - 10, centerY - 45);
+                    ctx.lineTo(centerX + offsetO - 20, centerY - 38);
+                    ctx.fill();
+                }}
             }} else if (molType === "CFC12") {{
                 let arm = 85;
                 let f1X = centerX - arm + (jiggle * 12); let f1Y = centerY - arm + (jiggle * 12);
@@ -249,6 +283,23 @@ with tab1:
                 ctx.fillStyle = "#444444"; ctx.beginPath(); ctx.arc(centerX, centerY, 20, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = "#ccff33"; ctx.beginPath(); ctx.arc(f1X, f1Y, 16, 0, Math.PI*2); ctx.arc(f2X, f2Y, 16, 0, Math.PI*2); ctx.fill();
                 ctx.fillStyle = "#00cc66"; ctx.beginPath(); ctx.arc(cl1X, cl1Y, 18, 0, Math.PI*2); ctx.arc(cl2X, cl2Y, 18, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#fff"; ctx.font = "14px Arial"; ctx.textAlign = "center"; ctx.fillText("C", centerX, centerY + 5);
+                ctx.fillStyle = "#222"; ctx.fillText("F", f1X, f1Y + 5); ctx.fillText("F", f2X, f2Y + 5);
+                ctx.fillStyle = "#fff"; ctx.fillText("Cl", cl1X, cl1Y + 5); ctx.fillText("Cl", cl2X, cl2Y + 5);
+
+                // FIXED: Adding CFC-12 Asymmetric Stretching Dipole Vector
+                if (dipoleActive) {{
+                    let dx = (f1X + f2X + cl1X + cl2X) / 4 - centerX;
+                    let dy = (f1Y + f2Y + cl1Y + cl2Y) / 4 - centerY;
+                    ctx.strokeStyle = "#bb33ff"; ctx.lineWidth = 5; ctx.fillStyle = "#bb33ff";
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.lineTo(centerX + dx * 6, centerY + dy * 6);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(centerX + dx * 6, centerY + dy * 6, 6, 0, Math.PI*2);
+                    ctx.fill();
+                }}
             }}
 
             requestAnimationFrame(draw);
@@ -318,7 +369,7 @@ with tab1:
             
             st.markdown("---")
             
-# 4. BUILD THE PLOTLY INTERACTIVE QUANTUM SPECTRUM MATCHING CHART
+            # 4. BUILD THE PLOTLY INTERACTIVE QUANTUM SPECTRUM MATCHING CHART
             fig_spec = go.Figure()
 
             # Forced bright labels for the baseline data trace
@@ -334,23 +385,23 @@ with tab1:
                     x0=absorption_center - absorption_width, x1=absorption_center + absorption_width,
                     fillcolor="rgba(187, 51, 255, 0.4)", opacity=0.7, layer="below", line_width=0,
                     annotation_text=f"{molecule} Quantum Resonance Band", annotation_position="top left",
-                    annotation_font=dict(size=13, color="#e099ff") # Highly visible bright pastel purple
+                    annotation_font=dict(size=13, color="#e099ff") 
                 )
 
             # FULL HIGH-CONTRAST TEXT OVERRIDES ON BLACK LAYOUT (Answers Removed for Student Analysis)
             fig_spec.update_layout(
                 title=dict(
                     text=f"Quantum Frequency Matching Layout ({molecule})", 
-                    font=dict(size=18, color='#ffffff') # Stark white main title only
+                    font=dict(size=18, color='#ffffff') 
                 ),
                 xaxis=dict(
                     title=dict(text="Wavelength (μm) [Lower frequency ➔]", font=dict(size=14, color='#ffffff')),
-                    tickfont=dict(size=12, color='#cccccc'), # Readable gray axis coordinates
+                    tickfont=dict(size=12, color='#cccccc'), 
                     gridcolor='#252525', range=[2, 25]
                 ),
                 yaxis=dict(
                     title=dict(text="Relative Thermal Intensity / Absorption Probability (%)", font=dict(size=14, color='#ffffff')),
-                    tickfont=dict(size=12, color='#cccccc'), # Readable gray tick metrics
+                    tickfont=dict(size=12, color='#cccccc'), 
                     gridcolor='#252525', range=[0, 110]
                 ),
                 plot_bgcolor='#111111',
@@ -358,13 +409,13 @@ with tab1:
                 showlegend=True,
                 legend=dict(
                     x=0.55, y=0.95,
-                    font=dict(size=12, color='#ffffff'), # Sharp white legend descriptors
+                    font=dict(size=12, color='#ffffff'), 
                     bgcolor='rgba(17, 17, 17, 0.8)',
                     bordercolor='#444444',
                     borderwidth=1
                 )
             )
-            st.plotly_chart(fig_spec, use_container_width=True)            #st.markdown(f"**APES Exam Connection:** {apes_note}")
+            st.plotly_chart(fig_spec, use_container_width=True)
 
 # =========================================================
 # TAB 2: ATMOSPHERIC SANDBOX (MACRO VIEW)
@@ -375,8 +426,8 @@ with tab2:
 
     sandbox_html = f"""
     <div style="background-color: #111; padding: 5px; border-radius: 12px; border: 1px solid #333; overflow: hidden;">
-<canvas id="worldCanvas" width="1000" height="540"
-style="width: 100%; height: auto; aspect-ratio: 1000 / 540; display: block;"></canvas>    </div>
+        <canvas id="worldCanvas" width="1000" height="540" style="width: 100%; height: auto; aspect-ratio: 1000 / 540; display: block;"></canvas>
+    </div>
 
     <script>
     const canvas = document.getElementById('worldCanvas');
@@ -391,14 +442,13 @@ style="width: 100%; height: auto; aspect-ratio: 1000 / 540; display: block;"></c
 
     function spawnPhoton() {{
         let w3 = canvas.width / 3;
-        // Lock solar targets strictly within the selected/clicked third area boundary
         let targetMinX = selectedThird * w3 + 30;
         let targetMaxX = (selectedThird + 1) * w3 - 30;
         
         photons.push({{
             x: 60, y: 60,                  
             targetX: targetMinX + Math.random() * (targetMaxX - targetMinX),
-            targetY: canvas.height - 65, // Dynamic ground baseline  
+            targetY: canvas.height - 65, 
             stage: 0,                      
             speed: 4 + Math.random() * 2
         }});
@@ -417,7 +467,7 @@ style="width: 100%; height: auto; aspect-ratio: 1000 / 540; display: block;"></c
     canvas.addEventListener('click', () => {{
         if (selectedThird !== activeThird) {{
             selectedThird = activeThird;
-            photons = []; // Clear old photons immediately when switching modes
+            photons = []; 
         }}
     }});
 
@@ -477,23 +527,20 @@ style="width: 100%; height: auto; aspect-ratio: 1000 / 540; display: block;"></c
         }}
         ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillText("Carbon Dioxide (CO₂)", w3 + 15, canvas.height - 80);
 
-        // Right Third: Methane (CH4) - Clean Square Shape
+        // Right Third: Methane (CH4)
         for(let i=0; i<3; i++) {{
             let mx = (w3 * 2) + 65 + (i * 80); 
             let my = 160 + (selectedThird === 2 ? Math.sin(time * 1.5 + i) * 20 : 0);
             let pulse = selectedThird === 2 ? Math.sin(time * 3 + i) * 5 : 0;
             
-            // Core C-H Bonds
             ctx.strokeStyle = "#444"; ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(mx - 18 + pulse, my); ctx.lineTo(mx + 18 - pulse, my);
             ctx.moveTo(mx, my - 18); ctx.lineTo(mx, my + 18);
             ctx.stroke();
 
-            // Central Carbon (Gray)
             ctx.fillStyle = "#444444"; ctx.beginPath(); ctx.arc(mx, my, 10, 0, Math.PI*2); ctx.fill(); 
             
-            // Outer Hydrides (White Squares)
             ctx.fillStyle = "#ffffff"; 
             ctx.fillRect(mx - 23 + pulse, my - 5, 10, 10);
             ctx.fillRect(mx + 13 - pulse, my - 5, 10, 10);
@@ -512,10 +559,9 @@ style="width: 100%; height: auto; aspect-ratio: 1000 / 540; display: block;"></c
                 if (p.x >= w3 && p.x < w3 * 2) currentZone = 1;
                 if (p.x >= w3 * 2) currentZone = 2;
 
-                // Yellow color going down (Solar), Crimson going up/trapped (Infrared Heat)
                 ctx.fillStyle = (p.stage === 0) ? "#FFFF00" : "#FF3333";
                 ctx.beginPath(); 
-                ctx.arc(p.x, p.y, 5, 0, Math.PI*2); // Perfect clean circles
+                ctx.arc(p.x, p.y, 5, 0, Math.PI*2); 
                 ctx.fill();
 
                 if (p.stage === 0) {{
@@ -555,4 +601,4 @@ style="width: 100%; height: auto; aspect-ratio: 1000 / 540; display: block;"></c
     animateSandbox();
     </script>
     """
-    st.components.v1.html(sandbox_html, height=1000)
+    st.components.v1.html(sandbox_html, height=580)
