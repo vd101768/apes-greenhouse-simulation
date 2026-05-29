@@ -601,4 +601,4 @@ with tab2:
     animateSandbox();
     </script>
     """
-    st.components.v1.html(sandbox_html, height=580)
+    st.components.v1.html(sandbox_html, height=1000)
